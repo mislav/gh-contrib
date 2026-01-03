@@ -18,7 +18,7 @@ days=( $(gh api graphql -f query='{
     }
   }
 }' --cache 24h --jq '..|.color?' | grep .) )
- 
+
 style=block
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -78,10 +78,18 @@ if [ -t 1 ] && [ "$(tput cols)" -lt 102 ]; then
   space=""
 fi
 
+total_days=${#days[@]}
+n_weeks=$(( (total_days + 6) / 7 ))  # ceiling division
+
 for d in $(seq 0 6); do
-  for w in $(seq 0 51); do
-    hex="${days[w*7+d]}"
-    printf "\e[38;2;%d;%d;%dm%s\e[m%s" "$((16#${hex:1:2}))" "$((16#${hex:3:2}))" "$((16#${hex:5:2}))" "$(char "$hex")" "$space"
+  for w in $(seq 0 $((n_weeks-1))); do
+    idx=$((w*7+d))
+    if [ "$idx" -lt "$total_days" ]; then
+      hex="${days[$idx]}"
+      printf "\e[38;2;%d;%d;%dm%s\e[m%s" "$((16#${hex:1:2}))" "$((16#${hex:3:2}))" "$((16#${hex:5:2}))" "$(char "$hex")" "$space"
+    else
+      printf "  "  # blank space if out of index
+    fi
   done
   printf "\n"
 done
